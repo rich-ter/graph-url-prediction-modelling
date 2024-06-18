@@ -6,39 +6,48 @@ import random
 from sklearn.metrics import accuracy_score,precision_score,f1_score,recall_score
 import numpy as np
 from matplotlib.cm import ScalarMappable
+import zipfile
+import os
 
-base_path = "/content/drive/My Drive/"
 
-# Create paths
-for i in range(17, 28, 2):
-    for j in range(4):
-        globals()[f"txt_{i}_{j}"] = f"{base_path}{i}_{j}.txt"
+zip_file_path = 'youtube_data.zip'
 
+# # Create paths
+# for i in range(17, 28, 2):
+#     for j in range(4):
+#         globals()[f"txt_{i}_{j}"] = f"{base_path}{i}_{j}.txt"
+
+# # Load data from zip file
+# Load data from zip file
 dataframes = []
-#3 Days
-file_paths = [txt_17_0,txt_17_1,txt_17_2,txt_17_3,txt_19_0, txt_19_1, txt_19_2, txt_19_3,
-              txt_21_0, txt_21_1, txt_21_2, txt_21_3,
-              txt_23_0, txt_23_1, txt_23_2, txt_23_3]
+def extract_and_load_data(zip_path):
+    global dataframes
+    with zipfile.ZipFile(zip_path, 'r') as zip_ref:
+        # List all files in the zip archive
+        file_names = zip_ref.namelist()
+        print(f"Files in the zip archive: {file_names}")
 
+        # Read and load each text file into a DataFrame
+        for file_name in file_names:
+            if file_name.endswith('.txt'):
+                with zip_ref.open(file_name) as file:
+                    try:
+                        df = pd.read_csv(file, sep='\t', header=None)
+                        if len(df.columns) in [9, 29]:  # Expecting either 9 or 29 columns
+                            dataframes.append(df)
+                        else:
+                            print(f"Ignoring file '{file_name}': Expected 9 or 29 columns, found {len(df.columns)} columns")
+                    except pd.errors.ParserError as e:
+                        print(f"Error parsing '{file_name}': {e}")
 
-# Loop each file
-for file_path in file_paths:
-    try:
-        # Read the file into a DataFrame
-        df = pd.read_csv(file_path, sep='\t', header=None) #
-        # Check if the DataFrame has 29 columns
-        if len(df.columns) == 29:
-            dataframes.append(df)
-        else:
-            print(f"Ignoring file '{file_path}': Expected 29 columns, found {len(df.columns)} columns")
-    except pd.errors.ParserError as e:
-        print(f"Error parsing '{file_path}':", e)
+# Call the function to load data
+extract_and_load_data(zip_file_path)
 
 # Concatenate all DataFrames into a single DataFrame
 combined_df = pd.concat(dataframes, ignore_index=True)
 
-print(len(combined_df))
-display(combined_df.head())
+print_combined = print(len(combined_df))
+# display(combined_df.head())
 
 #Null values
 null_values = combined_df.isnull().sum()
@@ -665,3 +674,7 @@ df_results = pd.concat([df_simple, df_pixie_uploader, df_pixie_genre,df_pixie_co
 # Display the result
 display(df_results)
 
+
+if __name__ == "__main__":
+    extract_and_load_data(zip_file_path)
+    print(print_combined)

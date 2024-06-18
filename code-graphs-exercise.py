@@ -47,7 +47,7 @@ extract_and_load_data(zip_file_path)
 combined_df = pd.concat(dataframes, ignore_index=True)
 
 print_combined = print(len(combined_df))
-# display(combined_df.head())
+ display(combined_df.head())
 
 #Null values
 null_values = combined_df.isnull().sum()
